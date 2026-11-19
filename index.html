@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,8 +13,13 @@
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: Arial, sans-serif;
-            background: url("rainbow-landscape.png") center / cover fixed no-repeat;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #6ec6ff 0%, #b3e5fc 55%, #a5d6a7 100%);
+            background-image: url("rainbow-landscape.jpg");
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,38 +27,92 @@
             color: #3c2415;
         }
 
+        /* Top-right button to load/save background image if local file path fails */
+        .bg-picker {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            background: rgba(255, 243, 215, 0.92);
+            border: 2px solid #8a4c20;
+            color: #713813;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .bg-picker:hover {
+            background: #ffe0a5;
+            transform: translateY(-1px);
+        }
+
         .card {
             width: 100%;
             max-width: 680px;
-            background: #fff3d7;
+            background: rgba(255, 243, 215, 0.96);
             border: 5px solid #8a4c20;
             border-radius: 24px;
-            padding: 30px;
+            padding: 32px;
             text-align: center;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
         }
 
         h1 {
             color: #713813;
-            font-size: 2.4rem;
-            margin-bottom: 8px;
+            font-size: 2.5rem;
+            margin: 0 0 8px 0;
         }
 
         .tagline {
             color: #80532f;
-            margin-bottom: 24px;
+            font-style: italic;
+            margin: 0 0 22px 0;
+        }
+
+        .best-score-badge {
+            display: inline-block;
+            background: #ffe0a5;
+            border: 2px solid #b87936;
+            border-radius: 999px;
+            padding: 6px 16px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
         }
 
         .info {
             display: flex;
             justify-content: space-between;
-            margin: 20px 0;
+            align-items: center;
+            margin-bottom: 10px;
             font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e6cfa3;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #b87936;
+            margin-bottom: 22px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 10%;
+            background: #65b52e;
+            transition: width 0.3s ease;
         }
 
         #question {
             font-size: 1.35rem;
-            margin: 26px 0;
+            line-height: 1.4;
+            margin: 20px 0 24px 0;
         }
 
         .options {
@@ -64,7 +122,7 @@
         }
 
         .option {
-            padding: 14px;
+            padding: 14px 16px;
             border: 2px solid #b87936;
             border-radius: 12px;
             background: #ffe0a5;
@@ -72,35 +130,50 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
         }
 
-        .option:hover {
+        .option:hover:not(:disabled) {
             background: #ffd17b;
+            transform: translateY(-1px);
         }
 
-        .option.selected {
-            background: #f4c45f;
-            border-color: #754018;
+        .option:disabled {
+            cursor: default;
+        }
+
+        .option.correct {
+            background: #65b52e;
+            border-color: #2d6617;
+            color: #ffffff;
+        }
+
+        .option.wrong {
+            background: #d9534f;
+            border-color: #962d2a;
+            color: #ffffff;
         }
 
         .main-button {
-            margin-top: 22px;
-            padding: 14px 25px;
+            margin-top: 20px;
+            padding: 14px 28px;
             border: 2px solid #34751d;
             border-radius: 12px;
             background: #65b52e;
             color: white;
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
         }
 
-        .main-button:hover {
+        .main-button:hover:not(:disabled) {
             background: #4d9822;
+            transform: translateY(-1px);
         }
 
         .main-button:disabled {
-            opacity: 0.5;
+            opacity: 0.45;
             cursor: not-allowed;
         }
 
@@ -109,14 +182,23 @@
         }
 
         #feedback {
-            min-height: 24px;
+            min-height: 26px;
             font-weight: bold;
-            margin-top: 15px;
+            font-size: 1.05rem;
+            margin: 16px 0 0 0;
+        }
+
+        .feedback-correct {
+            color: #2d6617;
+        }
+
+        .feedback-wrong {
+            color: #b52b27;
         }
 
         @media (max-width: 520px) {
             .card {
-                padding: 22px 16px;
+                padding: 24px 16px;
             }
 
             .options {
@@ -132,34 +214,40 @@
 
 <body>
 
+    <!-- Optional Background Selector if image isn't in the same folder -->
+    <input type="file" id="bgInput" accept="image/*" class="hidden" onchange="loadCustomBg(event)">
+    <button class="bg-picker" onclick="document.getElementById('bgInput').click()" title="Choose rainbow-landscape.jpg from your device">
+        Set Background
+    </button>
+
     <main class="card">
 
         <!-- Welcome Screen -->
         <section id="welcome">
             <h1>QuizMaster</h1>
-            <p class="tagline">
-                A Little Curiosity Goes a Long Way!
-            </p>
+            <p class="tagline">A Little Curiosity Goes a Long Way!</p>
+
+            <div id="bestScoreDisplay" class="best-score-badge">Best Score: 0 / 10</div>
 
             <p>
-                Test your General Knowledge with 10 questions
-                selected randomly from our question bank of 75.
+                Test your General Knowledge with <strong>10 questions</strong>
+                selected randomly from our question bank of <strong>75</strong>.
             </p>
 
-            <p>Choose your answers and check your final score!</p>
+            <p>Choose your answers and see how high you can score!</p>
 
-            <button class="main-button" onclick="startQuiz()">
-                Start Quiz
-            </button>
+            <button class="main-button" onclick="startQuiz()">Start Quiz</button>
         </section>
-
 
         <!-- Quiz Screen -->
         <section id="quiz" class="hidden">
-
             <div class="info">
                 <span id="questionNumber">Question 1 of 10</span>
                 <span id="score">Score: 0</span>
+            </div>
+
+            <div class="progress-track">
+                <div id="progressFill" class="progress-fill"></div>
             </div>
 
             <h2 id="question"></h2>
@@ -168,437 +256,145 @@
 
             <p id="feedback"></p>
 
-            <button id="nextButton"
-                    class="main-button"
-                    onclick="nextQuestion()"
-                    disabled>
+            <button id="nextButton" class="main-button" onclick="nextQuestion()" disabled>
                 Next Question
             </button>
-
         </section>
-
 
         <!-- Result Screen -->
         <section id="result" class="hidden">
-
             <h1>Quiz Completed!</h1>
-
             <h2 id="finalScore"></h2>
-
             <p id="resultMessage"></p>
-
-            <button class="main-button" onclick="startQuiz()">
-                Play Again
-            </button>
-
+            <button class="main-button" onclick="startQuiz()">Play Again</button>
         </section>
 
     </main>
 
-
     <script>
+        // Restore saved background image if the user picked one previously
+        window.addEventListener("DOMContentLoaded", function () {
+            const savedBg = localStorage.getItem("quizmaster_bg");
+            if (savedBg) {
+                document.body.style.backgroundImage = `url("${savedBg}")`;
+            }
+            updateBestScoreDisplay();
+        });
+
+        function loadCustomBg(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const dataUrl = e.target.result;
+                document.body.style.backgroundImage = `url("${dataUrl}")`;
+                try {
+                    localStorage.setItem("quizmaster_bg", dataUrl);
+                } catch (err) {
+                    // Image still applies for this session even if too large for localStorage
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateBestScoreDisplay() {
+            const best = localStorage.getItem("quizmaster_best") || 0;
+            document.getElementById("bestScoreDisplay").textContent = "Best Score: " + best + " / 10";
+        }
 
         // Question Bank - 75 General Knowledge Questions
-
         const questionBank = [
-
-            {
-                q: "Which is the largest ocean in the world?",
-                o: ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
-                a: "Pacific Ocean"
-            },
-            {
-                q: "What is the capital of Japan?",
-                o: ["Seoul", "Tokyo", "Beijing", "Bangkok"],
-                a: "Tokyo"
-            },
-            {
-                q: "Which planet is known as the Red Planet?",
-                o: ["Venus", "Mars", "Jupiter", "Mercury"],
-                a: "Mars"
-            },
-            {
-                q: "How many continents are there on Earth?",
-                o: ["Five", "Six", "Seven", "Eight"],
-                a: "Seven"
-            },
-            {
-                q: "Which is the largest hot desert in the world?",
-                o: ["Gobi", "Sahara", "Thar", "Kalahari"],
-                a: "Sahara"
-            },
-            {
-                q: "What is the currency of the United Kingdom?",
-                o: ["Euro", "Dollar", "Pound sterling", "Yen"],
-                a: "Pound sterling"
-            },
-            {
-                q: "Which animal is the largest mammal?",
-                o: ["African elephant", "Blue whale", "Giraffe", "Hippopotamus"],
-                a: "Blue whale"
-            },
-            {
-                q: "Which country is famous for the pyramids of Giza?",
-                o: ["Greece", "Egypt", "Mexico", "Italy"],
-                a: "Egypt"
-            },
-            {
-                q: "What is the smallest prime number?",
-                o: ["0", "1", "2", "3"],
-                a: "2"
-            },
-            {
-                q: "Which gas do plants absorb from the atmosphere?",
-                o: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
-                a: "Carbon dioxide"
-            },
-            {
-                q: "What is the capital of Australia?",
-                o: ["Sydney", "Melbourne", "Canberra", "Perth"],
-                a: "Canberra"
-            },
-            {
-                q: "Which is the longest river in India?",
-                o: ["Yamuna", "Ganga", "Godavari", "Narmada"],
-                a: "Ganga"
-            },
-            {
-                q: "Who wrote the national anthem of India?",
-                o: ["Bankim Chandra Chatterjee", "Rabindranath Tagore", "Sarojini Naidu", "Subramania Bharati"],
-                a: "Rabindranath Tagore"
-            },
-            {
-                q: "Which Indian state is known as the Land of Five Rivers?",
-                o: ["Haryana", "Punjab", "Rajasthan", "Gujarat"],
-                a: "Punjab"
-            },
-            {
-                q: "What is the national animal of India?",
-                o: ["Lion", "Elephant", "Bengal tiger", "Leopard"],
-                a: "Bengal tiger"
-            },
-            {
-                q: "Which city is known as the Pink City of India?",
-                o: ["Udaipur", "Jaipur", "Jodhpur", "Agra"],
-                a: "Jaipur"
-            },
-            {
-                q: "Who was the first Prime Minister of India?",
-                o: ["Sardar Patel", "Jawaharlal Nehru", "Rajendra Prasad", "Lal Bahadur Shastri"],
-                a: "Jawaharlal Nehru"
-            },
-            {
-                q: "Which is the highest mountain peak in India?",
-                o: ["Nanda Devi", "Kangchenjunga", "Anamudi", "Kamet"],
-                a: "Kangchenjunga"
-            },
-            {
-                q: "Which Indian festival is known as the Festival of Lights?",
-                o: ["Holi", "Pongal", "Diwali", "Onam"],
-                a: "Diwali"
-            },
-            {
-                q: "What is the national flower of India?",
-                o: ["Rose", "Lotus", "Jasmine", "Sunflower"],
-                a: "Lotus"
-            },
-            {
-                q: "Which is the largest state in India by area?",
-                o: ["Madhya Pradesh", "Maharashtra", "Rajasthan", "Uttar Pradesh"],
-                a: "Rajasthan"
-            },
-            {
-                q: "In which city is the Taj Mahal located?",
-                o: ["Delhi", "Agra", "Lucknow", "Jaipur"],
-                a: "Agra"
-            },
-            {
-                q: "Which Indian space organisation launched Chandrayaan?",
-                o: ["DRDO", "ISRO", "BARC", "HAL"],
-                a: "ISRO"
-            },
-            {
-                q: "What is the national bird of India?",
-                o: ["Sparrow", "Peacock", "Parrot", "Eagle"],
-                a: "Peacock"
-            },
-            {
-                q: "Which ocean lies to the south of India?",
-                o: ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"],
-                a: "Indian Ocean"
-            },
-            {
-                q: "Which country has the largest population in the world?",
-                o: ["United States", "India", "Indonesia", "Brazil"],
-                a: "India"
-            },
-            {
-                q: "What is the capital of Canada?",
-                o: ["Toronto", "Vancouver", "Ottawa", "Montreal"],
-                a: "Ottawa"
-            },
-            {
-                q: "Which is the largest country by land area?",
-                o: ["Canada", "China", "Russia", "United States"],
-                a: "Russia"
-            },
-            {
-                q: "The Great Wall is located in which country?",
-                o: ["India", "China", "Japan", "South Korea"],
-                a: "China"
-            },
-            {
-                q: "Which continent is the Sahara Desert in?",
-                o: ["Asia", "Africa", "Australia", "South America"],
-                a: "Africa"
-            },
-            {
-                q: "What is the capital of France?",
-                o: ["Rome", "Madrid", "Paris", "Lisbon"],
-                a: "Paris"
-            },
-            {
-                q: "Which country is known as the Land of the Rising Sun?",
-                o: ["China", "Japan", "Thailand", "Nepal"],
-                a: "Japan"
-            },
-            {
-                q: "Which is the smallest continent by land area?",
-                o: ["Europe", "Antarctica", "Australia", "South America"],
-                a: "Australia"
-            },
-            {
-                q: "Which sea separates Europe and Africa?",
-                o: ["Caribbean Sea", "Mediterranean Sea", "Arabian Sea", "Baltic Sea"],
-                a: "Mediterranean Sea"
-            },
-            {
-                q: "What is the capital of Brazil?",
-                o: ["Rio de Janeiro", "Sao Paulo", "Brasilia", "Salvador"],
-                a: "Brasilia"
-            },
-            {
-                q: "Which planet is closest to the Sun?",
-                o: ["Earth", "Venus", "Mercury", "Mars"],
-                a: "Mercury"
-            },
-            {
-                q: "What is the chemical symbol for gold?",
-                o: ["Ag", "Au", "Gd", "Go"],
-                a: "Au"
-            },
-            {
-                q: "How many bones are there in a typical adult human body?",
-                o: ["196", "206", "216", "226"],
-                a: "206"
-            },
-            {
-                q: "Which organ pumps blood around the human body?",
-                o: ["Lungs", "Brain", "Heart", "Liver"],
-                a: "Heart"
-            },
-            {
-                q: "What is the boiling point of water at sea level?",
-                o: ["50°C", "75°C", "100°C", "150°C"],
-                a: "100°C"
-            },
-            {
-                q: "Which part of a plant usually absorbs water?",
-                o: ["Flower", "Leaf", "Root", "Stem"],
-                a: "Root"
-            },
-            {
-                q: "What is the hardest naturally occurring substance?",
-                o: ["Quartz", "Iron", "Diamond", "Granite"],
-                a: "Diamond"
-            },
-            {
-                q: "Which vitamin is produced in the skin with sunlight?",
-                o: ["Vitamin A", "Vitamin B12", "Vitamin C", "Vitamin D"],
-                a: "Vitamin D"
-            },
-            {
-                q: "What is the process by which plants make their food?",
-                o: ["Respiration", "Photosynthesis", "Digestion", "Fermentation"],
-                a: "Photosynthesis"
-            },
-            {
-                q: "Which force pulls objects towards Earth?",
-                o: ["Magnetism", "Friction", "Gravity", "Electricity"],
-                a: "Gravity"
-            },
-            {
-                q: "Which is the largest planet in our solar system?",
-                o: ["Earth", "Saturn", "Jupiter", "Neptune"],
-                a: "Jupiter"
-            },
-            {
-                q: "What is the freezing point of water on the Celsius scale?",
-                o: ["0°C", "10°C", "32°C", "100°C"],
-                a: "0°C"
-            },
-            {
-                q: "Which gas is most abundant in Earth's atmosphere?",
-                o: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"],
-                a: "Nitrogen"
-            },
-            {
-                q: "How many rings are there in the Olympic symbol?",
-                o: ["Four", "Five", "Six", "Seven"],
-                a: "Five"
-            },
-            {
-                q: "How many players from one team are on the field in football?",
-                o: ["9", "10", "11", "12"],
-                a: "11"
-            },
-            {
-                q: "Which sport is played at Wimbledon?",
-                o: ["Cricket", "Tennis", "Golf", "Hockey"],
-                a: "Tennis"
-            },
-            {
-                q: "How many players are there in a cricket team?",
-                o: ["9", "10", "11", "12"],
-                a: "11"
-            },
-            {
-                q: "The term 'checkmate' belongs to which game?",
-                o: ["Ludo", "Chess", "Carrom", "Badminton"],
-                a: "Chess"
-            },
-            {
-                q: "Which country hosted the first modern Olympic Games in 1896?",
-                o: ["France", "Greece", "Italy", "United Kingdom"],
-                a: "Greece"
-            },
-            {
-                q: "In which sport would you perform a slam dunk?",
-                o: ["Volleyball", "Basketball", "Tennis", "Baseball"],
-                a: "Basketball"
-            },
-            {
-                q: "How many points is a free throw worth in basketball?",
-                o: ["One", "Two", "Three", "Four"],
-                a: "One"
-            },
-            {
-                q: "Which sport uses the terms birdie and eagle?",
-                o: ["Golf", "Rugby", "Swimming", "Boxing"],
-                a: "Golf"
-            },
-            {
-                q: "Which country won the first Cricket World Cup in 1975?",
-                o: ["Australia", "India", "West Indies", "England"],
-                a: "West Indies"
-            },
-            {
-                q: "Who was the first person to walk on the Moon?",
-                o: ["Yuri Gagarin", "Neil Armstrong", "Buzz Aldrin", "Michael Collins"],
-                a: "Neil Armstrong"
-            },
-            {
-                q: "In which year did India become independent?",
-                o: ["1945", "1947", "1950", "1952"],
-                a: "1947"
-            },
-            {
-                q: "Who was the first President of the United States?",
-                o: ["Abraham Lincoln", "John Adams", "George Washington", "Thomas Jefferson"],
-                a: "George Washington"
-            },
-            {
-                q: "Which ancient civilisation built Machu Picchu?",
-                o: ["Maya", "Aztec", "Inca", "Roman"],
-                a: "Inca"
-            },
-            {
-                q: "Who is traditionally credited with writing the Iliad and the Odyssey?",
-                o: ["Virgil", "Homer", "Plato", "Sophocles"],
-                a: "Homer"
-            },
-            {
-                q: "The Renaissance began in which country?",
-                o: ["France", "Italy", "Germany", "Spain"],
-                a: "Italy"
-            },
-            {
-                q: "Which Indian emperor is associated with the spread of Buddhism?",
-                o: ["Akbar", "Ashoka", "Chandragupta II", "Harsha"],
-                a: "Ashoka"
-            },
-            {
-                q: "Which monument in Agra was built by Shah Jahan?",
-                o: ["Qutub Minar", "Red Fort", "Taj Mahal", "Charminar"],
-                a: "Taj Mahal"
-            },
-            {
-                q: "Who painted the Mona Lisa?",
-                o: ["Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Claude Monet"],
-                a: "Leonardo da Vinci"
-            },
-            {
-                q: "Which language was used in many works of ancient Rome?",
-                o: ["Greek", "Latin", "Sanskrit", "Arabic"],
-                a: "Latin"
-            },
-            {
-                q: "Who is known as the Nightingale of India?",
-                o: ["Indira Gandhi", "Sarojini Naidu", "Mother Teresa", "Annie Besant"],
-                a: "Sarojini Naidu"
-            },
-            {
-                q: "Who developed the theory of relativity?",
-                o: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"],
-                a: "Albert Einstein"
-            },
-            {
-                q: "Who is known for discovering penicillin?",
-                o: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Edward Jenner"],
-                a: "Alexander Fleming"
-            },
-            {
-                q: "Who was the first woman to win a Nobel Prize?",
-                o: ["Mother Teresa", "Marie Curie", "Jane Addams", "Dorothy Hodgkin"],
-                a: "Marie Curie"
-            },
-            {
-                q: "Who wrote the Harry Potter book series?",
-                o: ["J. R. R. Tolkien", "J. K. Rowling", "Roald Dahl", "C. S. Lewis"],
-                a: "J. K. Rowling"
-            },
-            {
-                q: "Which Indian mathematician is famous for number theory?",
-                o: ["C. V. Raman", "Srinivasa Ramanujan", "Homi Bhabha", "S. N. Bose"],
-                a: "Srinivasa Ramanujan"
-            },
-            {
-                q: "Who was the first woman to travel into space?",
-                o: ["Kalpana Chawla", "Sally Ride", "Valentina Tereshkova", "Mae Jemison"],
-                a: "Valentina Tereshkova"
-            }
-
+            { q: "Which is the largest ocean in the world?", o: ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"], a: "Pacific Ocean" },
+            { q: "What is the capital of Japan?", o: ["Seoul", "Tokyo", "Beijing", "Bangkok"], a: "Tokyo" },
+            { q: "Which planet is known as the Red Planet?", o: ["Venus", "Mars", "Jupiter", "Mercury"], a: "Mars" },
+            { q: "How many continents are there on Earth?", o: ["Five", "Six", "Seven", "Eight"], a: "Seven" },
+            { q: "Which is the largest hot desert in the world?", o: ["Gobi", "Sahara", "Thar", "Kalahari"], a: "Sahara" },
+            { q: "What is the currency of the United Kingdom?", o: ["Euro", "Dollar", "Pound sterling", "Yen"], a: "Pound sterling" },
+            { q: "Which animal is the largest mammal?", o: ["African elephant", "Blue whale", "Giraffe", "Hippopotamus"], a: "Blue whale" },
+            { q: "Which country is famous for the pyramids of Giza?", o: ["Greece", "Egypt", "Mexico", "Italy"], a: "Egypt" },
+            { q: "What is the smallest prime number?", o: ["0", "1", "2", "3"], a: "2" },
+            { q: "Which gas do plants absorb from the atmosphere?", o: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], a: "Carbon dioxide" },
+            { q: "What is the capital of Australia?", o: ["Sydney", "Melbourne", "Canberra", "Perth"], a: "Canberra" },
+            { q: "Which is the longest river in India?", o: ["Yamuna", "Ganga", "Godavari", "Narmada"], a: "Ganga" },
+            { q: "Who wrote the national anthem of India?", o: ["Bankim Chandra Chatterjee", "Rabindranath Tagore", "Sarojini Naidu", "Subramania Bharati"], a: "Rabindranath Tagore" },
+            { q: "Which Indian state is known as the Land of Five Rivers?", o: ["Haryana", "Punjab", "Rajasthan", "Gujarat"], a: "Punjab" },
+            { q: "What is the national animal of India?", o: ["Lion", "Elephant", "Bengal tiger", "Leopard"], a: "Bengal tiger" },
+            { q: "Which city is known as the Pink City of India?", o: ["Udaipur", "Jaipur", "Jodhpur", "Agra"], a: "Jaipur" },
+            { q: "Who was the first Prime Minister of India?", o: ["Sardar Patel", "Jawaharlal Nehru", "Rajendra Prasad", "Lal Bahadur Shastri"], a: "Jawaharlal Nehru" },
+            { q: "Which is the highest mountain peak in India?", o: ["Nanda Devi", "Kangchenjunga", "Anamudi", "Kamet"], a: "Kangchenjunga" },
+            { q: "Which Indian festival is known as the Festival of Lights?", o: ["Holi", "Pongal", "Diwali", "Onam"], a: "Diwali" },
+            { q: "What is the national flower of India?", o: ["Rose", "Lotus", "Jasmine", "Sunflower"], a: "Lotus" },
+            { q: "Which is the largest state in India by area?", o: ["Madhya Pradesh", "Maharashtra", "Rajasthan", "Uttar Pradesh"], a: "Rajasthan" },
+            { q: "In which city is the Taj Mahal located?", o: ["Delhi", "Agra", "Lucknow", "Jaipur"], a: "Agra" },
+            { q: "Which Indian space organisation launched Chandrayaan?", o: ["DRDO", "ISRO", "BARC", "HAL"], a: "ISRO" },
+            { q: "What is the national bird of India?", o: ["Sparrow", "Peacock", "Parrot", "Eagle"], a: "Peacock" },
+            { q: "Which ocean lies to the south of India?", o: ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"], a: "Indian Ocean" },
+            { q: "Which country has the largest population in the world?", o: ["United States", "India", "Indonesia", "Brazil"], a: "India" },
+            { q: "What is the capital of Canada?", o: ["Toronto", "Vancouver", "Ottawa", "Montreal"], a: "Ottawa" },
+            { q: "Which is the largest country by land area?", o: ["Canada", "China", "Russia", "United States"], a: "Russia" },
+            { q: "The Great Wall is located in which country?", o: ["India", "China", "Japan", "South Korea"], a: "China" },
+            { q: "Which continent is the Sahara Desert in?", o: ["Asia", "Africa", "Australia", "South America"], a: "Africa" },
+            { q: "What is the capital of France?", o: ["Rome", "Madrid", "Paris", "Lisbon"], a: "Paris" },
+            { q: "Which country is known as the Land of the Rising Sun?", o: ["China", "Japan", "Thailand", "Nepal"], a: "Japan" },
+            { q: "Which is the smallest continent by land area?", o: ["Europe", "Antarctica", "Australia", "South America"], a: "Australia" },
+            { q: "Which sea separates Europe and Africa?", o: ["Caribbean Sea", "Mediterranean Sea", "Arabian Sea", "Baltic Sea"], a: "Mediterranean Sea" },
+            { q: "What is the capital of Brazil?", o: ["Rio de Janeiro", "Sao Paulo", "Brasilia", "Salvador"], a: "Brasilia" },
+            { q: "Which planet is closest to the Sun?", o: ["Earth", "Venus", "Mercury", "Mars"], a: "Mercury" },
+            { q: "What is the chemical symbol for gold?", o: ["Ag", "Au", "Gd", "Go"], a: "Au" },
+            { q: "How many bones are there in a typical adult human body?", o: ["196", "206", "216", "226"], a: "206" },
+            { q: "Which organ pumps blood around the human body?", o: ["Lungs", "Brain", "Heart", "Liver"], a: "Heart" },
+            { q: "What is the boiling point of water at sea level?", o: ["50°C", "75°C", "100°C", "150°C"], a: "100°C" },
+            { q: "Which part of a plant usually absorbs water?", o: ["Flower", "Leaf", "Root", "Stem"], a: "Root" },
+            { q: "What is the hardest naturally occurring substance?", o: ["Quartz", "Iron", "Diamond", "Granite"], a: "Diamond" },
+            { q: "Which vitamin is produced in the skin with sunlight?", o: ["Vitamin A", "Vitamin B12", "Vitamin C", "Vitamin D"], a: "Vitamin D" },
+            { q: "What is the process by which plants make their food?", o: ["Respiration", "Photosynthesis", "Digestion", "Fermentation"], a: "Photosynthesis" },
+            { q: "Which force pulls objects towards Earth?", o: ["Magnetism", "Friction", "Gravity", "Electricity"], a: "Gravity" },
+            { q: "Which is the largest planet in our solar system?", o: ["Earth", "Saturn", "Jupiter", "Neptune"], a: "Jupiter" },
+            { q: "What is the freezing point of water on the Celsius scale?", o: ["0°C", "10°C", "32°C", "100°C"], a: "0°C" },
+            { q: "Which gas is most abundant in Earth's atmosphere?", o: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"], a: "Nitrogen" },
+            { q: "How many rings are there in the Olympic symbol?", o: ["Four", "Five", "Six", "Seven"], a: "Five" },
+            { q: "How many players from one team are on the field in football?", o: ["9", "10", "11", "12"], a: "11" },
+            { q: "Which sport is played at Wimbledon?", o: ["Cricket", "Tennis", "Golf", "Hockey"], a: "Tennis" },
+            { q: "How many players are there in a cricket team?", o: ["9", "10", "11", "12"], a: "11" },
+            { q: "The term 'checkmate' belongs to which game?", o: ["Ludo", "Chess", "Carrom", "Badminton"], a: "Chess" },
+            { q: "Which country hosted the first modern Olympic Games in 1896?", o: ["France", "Greece", "Italy", "United Kingdom"], a: "Greece" },
+            { q: "In which sport would you perform a slam dunk?", o: ["Volleyball", "Basketball", "Tennis", "Baseball"], a: "Basketball" },
+            { q: "How many points is a free throw worth in basketball?", o: ["One", "Two", "Three", "Four"], a: "One" },
+            { q: "Which sport uses the terms birdie and eagle?", o: ["Golf", "Rugby", "Swimming", "Boxing"], a: "Golf" },
+            { q: "Which country won the first Cricket World Cup in 1975?", o: ["Australia", "India", "West Indies", "England"], a: "West Indies" },
+            { q: "Who was the first person to walk on the Moon?", o: ["Yuri Gagarin", "Neil Armstrong", "Buzz Aldrin", "Michael Collins"], a: "Neil Armstrong" },
+            { q: "In which year did India become independent?", o: ["1945", "1947", "1950", "1952"], a: "1947" },
+            { q: "Who was the first President of the United States?", o: ["Abraham Lincoln", "John Adams", "George Washington", "Thomas Jefferson"], a: "George Washington" },
+            { q: "Which ancient civilisation built Machu Picchu?", o: ["Maya", "Aztec", "Inca", "Roman"], a: "Inca" },
+            { q: "Who is traditionally credited with writing the Iliad and the Odyssey?", o: ["Virgil", "Homer", "Plato", "Sophocles"], a: "Homer" },
+            { q: "The Renaissance began in which country?", o: ["France", "Italy", "Germany", "Spain"], a: "Italy" },
+            { q: "Which Indian emperor is associated with the spread of Buddhism?", o: ["Akbar", "Ashoka", "Chandragupta II", "Harsha"], a: "Ashoka" },
+            { q: "Which monument in Agra was built by Shah Jahan?", o: ["Qutub Minar", "Red Fort", "Taj Mahal", "Charminar"], a: "Taj Mahal" },
+            { q: "Who painted the Mona Lisa?", o: ["Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Claude Monet"], a: "Leonardo da Vinci" },
+            { q: "Which language was used in many works of ancient Rome?", o: ["Greek", "Latin", "Sanskrit", "Arabic"], a: "Latin" },
+            { q: "Who is known as the Nightingale of India?", o: ["Indira Gandhi", "Sarojini Naidu", "Mother Teresa", "Annie Besant"], a: "Sarojini Naidu" },
+            { q: "Who developed the theory of relativity?", o: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], a: "Albert Einstein" },
+            { q: "Who is known for discovering penicillin?", o: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Edward Jenner"], a: "Alexander Fleming" },
+            { q: "Who was the first woman to win a Nobel Prize?", o: ["Mother Teresa", "Marie Curie", "Jane Addams", "Dorothy Hodgkin"], a: "Marie Curie" },
+            { q: "Who wrote the Harry Potter book series?", o: ["J. R. R. Tolkien", "J. K. Rowling", "Roald Dahl", "C. S. Lewis"], a: "J. K. Rowling" },
+            { q: "Which Indian mathematician is famous for number theory?", o: ["C. V. Raman", "Srinivasa Ramanujan", "Homi Bhabha", "S. N. Bose"], a: "Srinivasa Ramanujan" },
+            { q: "Who was the first woman to travel into space?", o: ["Kalpana Chawla", "Sally Ride", "Valentina Tereshkova", "Mae Jemison"], a: "Valentina Tereshkova" }
         ];
-
-
-        // Variables used in the quiz
 
         let quizQuestions = [];
         let currentQuestion = 0;
         let totalScore = 0;
-        let selectedAnswer = "";
-
-
-        // Start the quiz
+        let answered = false;
 
         function startQuiz() {
-
-            // Shuffle questions and select 10 randomly
-
-            quizQuestions = questionBank
-                .slice()
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 10);
+            // Fisher-Yates shuffle for true randomness
+            const shuffled = questionBank.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            quizQuestions = shuffled.slice(0, 10);
 
             currentQuestion = 0;
             totalScore = 0;
@@ -610,123 +406,102 @@
             showQuestion();
         }
 
-
-        // Display the current question
-
         function showQuestion() {
-
-            selectedAnswer = "";
-
+            answered = false;
             const question = quizQuestions[currentQuestion];
 
             document.getElementById("questionNumber").textContent =
                 "Question " + (currentQuestion + 1) + " of 10";
-
             document.getElementById("score").textContent =
                 "Score: " + totalScore;
+            document.getElementById("progressFill").style.width =
+                ((currentQuestion + 1) * 10) + "%";
+            document.getElementById("question").textContent = question.q;
 
-            document.getElementById("question").textContent =
-                question.q;
+            const feedbackEl = document.getElementById("feedback");
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
 
-            document.getElementById("feedback").textContent = "";
-
-            document.getElementById("nextButton").disabled = true;
+            const nextBtn = document.getElementById("nextButton");
+            nextBtn.disabled = true;
+            nextBtn.textContent = currentQuestion === 9 ? "See Result" : "Next Question";
 
             const optionsArea = document.getElementById("options");
-
             optionsArea.innerHTML = "";
 
-            question.o.forEach(function(option) {
-
+            question.o.forEach(function (option) {
                 const button = document.createElement("button");
-
                 button.textContent = option;
                 button.className = "option";
-
-                button.addEventListener("click", function() {
-                    selectAnswer(option, button);
+                button.addEventListener("click", function () {
+                    checkAnswer(option, button);
                 });
-
                 optionsArea.appendChild(button);
-
             });
-
-            document.getElementById("nextButton").textContent =
-                currentQuestion === 9 ? "See Result" : "Next Question";
         }
 
+        function checkAnswer(selectedOption, clickedButton) {
+            if (answered) return;
+            answered = true;
 
-        // Select an answer
-
-        function selectAnswer(answer, clickedButton) {
-
-            selectedAnswer = answer;
-
+            const correctAnswer = quizQuestions[currentQuestion].a;
             const allOptions = document.querySelectorAll(".option");
+            const feedbackEl = document.getElementById("feedback");
 
-            allOptions.forEach(function(button) {
-                button.classList.remove("selected");
+            allOptions.forEach(function (btn) {
+                btn.disabled = true;
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add("correct");
+                }
             });
 
-            clickedButton.classList.add("selected");
+            if (selectedOption === correctAnswer) {
+                totalScore++;
+                document.getElementById("score").textContent = "Score: " + totalScore;
+                feedbackEl.textContent = "Correct!";
+                feedbackEl.className = "feedback-correct";
+            } else {
+                clickedButton.classList.add("wrong");
+                feedbackEl.textContent = "Incorrect! The correct answer is " + correctAnswer + ".";
+                feedbackEl.className = "feedback-wrong";
+            }
 
             document.getElementById("nextButton").disabled = false;
         }
 
-
-        // Move to the next question
-
         function nextQuestion() {
-
-            const correctAnswer = quizQuestions[currentQuestion].a;
-
-            if (selectedAnswer === correctAnswer) {
-                totalScore++;
-            }
-
             if (currentQuestion < 9) {
-
                 currentQuestion++;
-
                 showQuestion();
-
             } else {
-
                 showResult();
-
             }
         }
 
-
-        // Display the final result
-
         function showResult() {
-
             document.getElementById("quiz").classList.add("hidden");
-
             document.getElementById("result").classList.remove("hidden");
 
             document.getElementById("finalScore").textContent =
                 "Your Score: " + totalScore + " / 10";
 
+            const previousBest = Number(localStorage.getItem("quizmaster_best") || 0);
+            if (totalScore > previousBest) {
+                localStorage.setItem("quizmaster_best", totalScore);
+                updateBestScoreDisplay();
+            }
+
             if (totalScore >= 8) {
-
                 document.getElementById("resultMessage").textContent =
-                    "Excellent work! You know your GK!";
-
+                    "Excellent work! You really know your General Knowledge!";
             } else if (totalScore >= 5) {
-
                 document.getElementById("resultMessage").textContent =
                     "Good effort! Keep learning and try again.";
-
             } else {
-
                 document.getElementById("resultMessage").textContent =
-                    "Nice try! A new round is waiting for you.";
-
+                    "Nice try! A fresh set of questions is waiting for you.";
             }
         }
-
     </script>
 
 </body>
